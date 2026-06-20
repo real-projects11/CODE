@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Código de Acceso — MagisTV</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #000000; 
+    --surface:   #0a0a0c; 
+    --border:    #27272a; 
+    --border-hi: #3f3f46; 
+    --text:      #ffffff; 
+    --muted:     #a1a1aa; 
+    --accent:    #ffffff; 
+    --accent-dk: #e4e4e7; 
+    --code-bg:   #050505;
+    --code-glow: rgba(255, 255, 255, 0.15);
+    --red-neon:  #ef4444; 
+    --green-neon: #10b981; 
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    width: 100%;
+    /* Permite scroll natural si es necesario, pero sin rebotes molestos */
+    overscroll-behavior: none; 
+  }
+
+  /* ── CONTENEDOR PRINCIPAL (ARREGLO DE PANTALLA) ── */
+  .app-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    /* Reducimos el padding y forzamos altura para que NO haya scroll */
+    padding: 10px 16px;
+    height: 100dvh; 
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    gap: 8px;
+  }
+
+  /* ── LOADING SCREEN ── */
+  .loading-screen {
+    position: fixed; inset: 0; z-index: 99999;
+    background: #000000;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  .loading-screen.hidden {
+    opacity: 0; visibility: hidden;
+  }
+
+  .loading-content {
+    max-width: 320px; display: flex; flex-direction: column; gap: 16px;
+    align-items: center; /* Centrado extra */
+    justify-content: center;
+  }
+
+  .load-line {
+    font-size: 14px; line-height: 1.5; color: var(--muted);
+    opacity: 0; transform: translateY(10px);
+    animation: fadeInUp 0.5s forwards;
+    text-align: center; /* Asegurar centrado de texto */
+  }
+  .load-line strong { color: var(--text); font-weight: 600; }
+  .load-line.warning { color: var(--red-neon); font-size: 13px; font-weight: 500; }
+
+  /* Secuencia de aparición */
+  .delay-1 { animation-delay: 0.5s; }
+  .delay-2 { animation-delay: 2.0s; }
+  .delay-3 { animation-delay: 3.5s; }
+  .delay-4 { animation-delay: 5.0s; }
+
+  @keyframes fadeInUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .loading-bar-container {
+    width: 100%; height: 3px; background: var(--border);
+    border-radius: 3px; margin-top: 10px; overflow: hidden;
+    opacity: 0; animation: fadeInUp 0.5s forwards; animation-delay: 5.0s;
+  }
+  .loading-bar-fill {
+    height: 100%; background: var(--text); width: 0%;
+    animation: fillBar 2.5s ease-in-out forwards; animation-delay: 5.2s;
+  }
+  @keyframes fillBar {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+  }
+
+  /* ── ESTILOS REDUCIDOS PARA EVITAR SCROLL ── */
+  .sp-topbar, .scarcity-bar {
+    width: 100%; background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 500; color: var(--muted);
+  }
+  .sp-topbar .live-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--green-neon);
+    animation: livePulse 2s infinite; flex-shrink: 0;
+  }
+  @keyframes livePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70%  { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+  .scarcity-bar strong { color: var(--text); }
+  .scarcity-bar .fire { font-size: 13px; filter: grayscale(100%) brightness(200%); }
+
+  .card {
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+
+  .card-header {
+    background: #050505; border-bottom: 1px solid var(--border);
+    padding: 12px 16px 10px; display: flex; align-items: center; gap: 12px;
+  }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text); box-shadow: 0 0 8px rgba(255,255,255,0.5); flex-shrink: 0; }
+  .logo-text { font-size: 13px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text); }
+  .badge { margin-left: auto; font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bg); background: var(--text); padding: 4px 8px; border-radius: 4px; }
+
+  .card-body { padding: 14px 16px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); align-self: flex-start; }
+
+  .queue-widget {
+    width: 100%; border: 1px solid var(--border-hi); border-radius: 8px;
+    padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .queue-left { display: flex; flex-direction: column; gap: 2px; }
+  .queue-label, .skip-price-label { font-size: 10px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .queue-position { font-size: 24px; font-weight: 300; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+  .queue-position span { font-weight: 700; color: var(--text); }
+  .queue-eta { font-size: 10px; color: var(--muted); }
+  .queue-skip-hint { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  /* Color cambiado a verde neón para que coincida con el desbloqueo */
+  .skip-price-value { font-size: 18px; font-weight: 400; color: var(--green-neon); font-family: 'JetBrains Mono', monospace; }
+
+  .timer-wrap { width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 0; }
+  .timer-display { font-family: 'JetBrains Mono', monospace; font-size: clamp(48px, 15vw, 64px); font-weight: 300; letter-spacing: -0.04em; line-height: 1; transition: opacity 0.4s; }
+  .timer-display.urgent { animation: pulse-urgent 1.5s ease-in-out infinite; }
+  @keyframes pulse-urgent { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .timer-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .progress-track { width: 100%; height: 2px; background: var(--border); overflow: hidden; margin-top: 2px; margin-bottom: 2px; }
+  .progress-fill { height: 100%; background: var(--text); width: 100%; transform-origin: left; transition: width 1s linear; }
+
+  .code-section { width: 100%; }
+  .code-box { position: relative; background: var(--code-bg); border: 1px solid var(--border-hi); border-radius: 8px; padding: 12px 16px; text-align: center; overflow: hidden; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+  .code-box::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(255,255,255,0.02) 4px, rgba(255,255,255,0.02) 8px); pointer-events: none; }
+  .code-value { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 400; letter-spacing: 0.15em; color: var(--text); text-shadow: 0 0 20px var(--code-glow); user-select: all; -webkit-user-select: all; }
+  .code-locked { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .lock-icon { width: 24px; height: 24px; opacity: 0.4; color: var(--text); }
+  .blurred-code { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.12em; color: var(--border-hi); filter: blur(5px); user-select: none; pointer-events: none; }
+
+  .loss-frame { width: 100%; border: 1px dashed var(--border-hi); border-radius: 8px; padding: 8px; font-size: 11px; color: var(--muted); line-height: 1.5; text-align: center; }
+  .loss-frame strong { color: var(--red-neon); font-weight: 600; }
+
+  .btn-primary {
+    width: 100%; padding: 14px; border-radius: 8px; background: var(--text); color: var(--bg);
+    border: 1px solid rgba(239, 68, 68, 0.2); box-shadow: 0 0 15px rgba(239, 68, 68, 0.05);
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-primary:active { background: var(--accent-dk); transform: scale(0.98); }
+  @keyframes heartbeatPulse { 0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.2); } 50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); } }
+  .btn-primary.pulse { animation: heartbeatPulse 2s infinite; }
+
+  .btn-copy { margin-top: 10px; width: 100%; padding: 12px; border: 1px solid var(--border-hi); background: transparent; color: var(--text); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.15s; }
+  .btn-copy:active { background: rgba(255,255,255,0.05); }
+  .btn-copy.copied { border-color: var(--text); color: var(--text); }
+
+  .code-box.revealed { border-color: var(--green-neon); }
+  .done-banner { display: none; width: 100%; margin-top: 10px; background: rgba(16, 185, 129, 0.05); border: 1px solid var(--green-neon); border-radius: 8px; padding: 10px; font-size: 11px; color: var(--green-neon); text-align: center; font-weight: 500; }
+  .done-banner.visible { display: block; }
+
+  .notif-stack { position: fixed; bottom: 16px; left: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .notif { width: min(280px, calc(100vw - 32px)); background: rgba(10, 10, 12, 0.8); backdrop-filter: blur(10px); border: 1px solid var(--border-hi); border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px; animation: notifIn 0.4s ease both; }
+  .notif.hide { animation: notifOut 0.4s ease both; }
+  .notif-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .notif-text { font-size: 11px; line-height: 1.4; color: var(--muted); }
+  .notif-text strong { color: var(--text); }
+  .notif-time { font-size: 10px; color: var(--text); font-weight: 500; margin-top: 3px; }
+  @keyframes notifIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes notifOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(12px); opacity: 0; } }
+
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100; align-items: flex-end; justify-content: center; padding: 16px; }
+  .modal-backdrop.open { display: flex; }
+  .modal { width: 100%; max-width: 400px; background: var(--surface); border: 1px solid var(--border-hi); border-radius: 12px; padding: 24px 20px 20px; animation: slide-up 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes slide-up { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal h2 { font-size: 17px; font-weight: 500; margin-bottom: 12px; }
+  .modal p { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+  .modal-loss { border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 16px; font-size: 12px; line-height: 1.6; color: var(--muted); }
+  .modal-loss .amount { font-size: 14px; font-weight: 600; color: var(--red-neon); }
+  .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+  .btn-modal-close { padding: 14px; border: none; background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; transition: 0.15s; }
+  .btn-modal-close:active { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-content">
+    <div class="load-line delay-1">Recibimos más de <strong>10.000 usuarios</strong> en estos últimos 2 días.</div>
+    <div class="load-line delay-2">Más de <strong>2.000 códigos</strong> entregados al día.</div>
+    <div class="load-line warning delay-3">Por alta demanda... tenemos un breve tiempo de espera.</div>
+    
+    <div class="load-line delay-4" style="margin-top: 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text);">
+      Cargando tu código...
+      <div class="loading-bar-container">
+        <div class="loading-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="app-container" id="mainApp" style="display: none;">
+  <div class="sp-topbar" id="spTopbar">
+    <span class="live-dot"></span>
+    <span id="spTopText">847 personas activaron su código hoy</span>
+  </div>
+
+  <div class="scarcity-bar" id="scarcityBar">
+    <span class="fire">🔥</span>
+    <span>Solo quedan <strong id="codesLeft">12</strong> códigos disponibles para esta hora</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="logo-dot"></div>
+      <span class="logo-text">MagisTV</span>
+      <span class="badge">Acceso</span>
+    </div>
+
+    <div class="card-body">
+      <div class="queue-widget" id="queueWidget">
+        <div class="queue-left">
+          <span class="queue-label">Tu posición en fila</span>
+          <!-- INICIO EN 17 -->
+          <div class="queue-position">#<span id="queuePos">17</span></div>
+          <span class="queue-eta" id="queueEta">~10m 00s de espera</span>
+        </div>
+        <div class="queue-skip-hint">
+          <span class="skip-price-label">Saltear ahora por</span>
+          <span class="skip-price-value">$1.50 USD</span>
+        </div>
+      </div>
+
+      <div class="timer-wrap">
+        <span class="section-label">Tiempo restante</span>
+        <div class="timer-display" id="timerDisplay">10:00</div>
+        <span class="timer-sub">para desbloqueo automático</span>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="code-section">
+        <span class="section-label" style="display:block; margin-bottom:8px;">Tu código</span>
+        <div class="code-box" id="codeBox">
+          <div class="code-locked" id="codeLocked">
+            <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <span class="blurred-code">XXXXXX</span>
+          </div>
+          <span class="code-value" id="codeValue" style="display:none;"></span>
+        </div>
+        <div class="done-banner" id="doneBanner">Código disponible — úsalo antes de que expire</div>
+        <button class="btn-copy" id="btnCopy" style="display:none;" onclick="copyCode()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copiar código
+        </button>
+      </div>
+
+      <div class="loss-frame" id="lossFrame">
+        Cada mes sin esto, perdés <strong>~$50 USD en cable</strong>. Saltear la espera te cuesta <strong style="color: var(--green-neon);">$1.50 USD</strong>.
+      </div>
+
+      <button class="btn-primary" id="btnPay" onclick="openModal()">
+        Saltear fila y desbloquear ahora — $1.50 USD
+      </button>
+    </div>
+  </div>
+</main>
+
+<div class="notif-stack" id="notifStack"></div>
+
+<div class="modal-backdrop" id="modal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal">
+    <h2>Saltear la espera</h2>
+    <div class="modal-loss">
+      Sin MagisTV pagás <strong class="amount">~$50 USD/mes</strong> en cable.<br>
+      Saltear la espera tiene un costo único de <strong class="amount" style="color: var(--green-neon);">$1.50 USD</strong>.
+    </div>
+    <p>Esto es opcional. Si preferís esperar los <strong id="modalTimeLeft">10:00</strong>, el código se desbloquea solo sin costo.</p>
+    <div class="modal-actions">
+      <button class="btn-primary" id="btnPayModal" onclick="simulatePay()">Continuar al pago — $1.50 USD</button>
+      <button class="btn-modal-close" onclick="closeModal()">Prefiero esperar en la fila</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIG ───────────────────────────────────────────────────────────────
+  const DURATION_SECONDS = 10 * 60;
+  const STORAGE_KEY      = 'magistv_unlock_end';
+  // NUEVO CÓDIGO REVELADO
+  const CODE_PLACEHOLDER = '7913100';
+  let endTime = null;
+  let rafId   = null;
+
+  // ─── BOOTSTRAP (LOADING SCREEN) ───────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const loader = document.getElementById('loadingScreen');
+      const app = document.getElementById('mainApp');
+      
+      app.style.display = 'flex';
+      loader.classList.add('hidden');
+      
+      setTimeout(() => {
+        loader.style.display = 'none';
+        initApp();
+      }, 600);
+      
+    }, 8000); 
+  });
+
+  // ─── INIT ─────────────────────────────────────────────────────────────────
+  function initApp() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const now    = Date.now();
+
+    if (stored && parseInt(stored, 10) > now) {
+      endTime = parseInt(stored, 10);
+    } else {
+      endTime = now + DURATION_SECONDS * 1000;
+      localStorage.setItem(STORAGE_KEY, endTime);
+    }
+
+    setTimeout(createNotif, 3000);
+    setInterval(() => { if (Math.random() > 0.5) createNotif(); }, 7000);
+    setInterval(updateActivationCount, 8000);
+
+    setTimeout(() => {
+      document.getElementById('btnPay')?.classList.add('pulse');
+      document.getElementById('btnPayModal')?.classList.add('pulse');
+    }, 30000);
+
+    tick();
+  }
+
+  // ─── TICK & QUEUE ─────────────────────────────────────────────────────────
+  function tick() {
+    const remaining = Math.max(0, endTime - Date.now());
+    const secs      = Math.ceil(remaining / 1000);
+    const mm        = String(Math.floor(secs / 60)).padStart(2, '0');
+    const ss        = String(secs % 60).padStart(2, '0');
+    const display   = document.getElementById('timerDisplay');
+    const fill      = document.getElementById('progressFill');
+    const elapsed   = DURATION_SECONDS - secs;
+    const pct       = Math.min(100, (elapsed / DURATION_SECONDS) * 100);
+
+    display.textContent = `${mm}:${ss}`;
+    fill.style.width    = `${100 - pct}%`;
+    document.getElementById('modalTimeLeft').textContent = `${mm}:${ss}`;
+
+    updateQueueSync(remaining, secs, mm, ss);
+
+    if (secs <= 60 && secs > 0) display.classList.add('urgent');
+    else display.classList.remove('urgent');
+
+    if (remaining <= 0) { reveal(); return; }
+    rafId = requestAnimationFrame(() => setTimeout(tick, 500));
+  }
+
+  function updateQueueSync(remainingMs, totalSecs, mm, ss) {
+    const posEl = document.getElementById('queuePos');
+    const etaEl = document.getElementById('queueEta');
+    if (!posEl || !etaEl) return;
+
+    const totalMs = DURATION_SECONDS * 1000;
+    // ACTUALIZADO MULTIPLICADOR A 17
+    const currentPos = Math.max(1, Math.ceil(17 * (remainingMs / totalMs)));
+    posEl.textContent = currentPos;
+
+    if (currentPos <= 1) etaEl.textContent = '¡Sos el próximo!';
+    else etaEl.textContent = totalSecs < 60 ? `~${totalSecs} seg de espera` : `~${mm}m ${ss}s de espera`;
+  }
+
+  // ─── SCARCITY & COUNTERS ──────────────────────────────────────────────────
+  let codesLeft = 12;
+  function tickScarcity() {
+    if (codesLeft <= 1) return;
+    if (Math.random() > 0.6) {
+      codesLeft = Math.max(1, codesLeft - 1);
+      document.getElementById('codesLeft').textContent = codesLeft;
+    }
+    setTimeout(tickScarcity, 6000 + Math.random() * 8000);
+  }
+  setTimeout(tickScarcity, 5000);
+
+  let activationCount = 847;
+  function updateActivationCount() {
+    activationCount += Math.floor(Math.random() * 3) + 1;
+    document.getElementById('spTopText').textContent = `${activationCount.toLocaleString('es-AR')} personas activaron su código hoy`;
+  }
+
+  // ─── NOTIFICATIONS ────────────────────────────────────────────────────────
+  const names  = ['Matías', 'Lucía', 'Nicolás', 'Valentina', 'Rodrigo', 'Florencia', 'Agustín', 'Camila', 'Diego', 'Sofía'];
+  const cities = ['México', 'Colombia', 'España', 'Argentina', 'Perú', 'Chile', 'Ecuador', 'República Dominicana', 'Uruguay'];
+  const texts  = [(n, c) => `<strong>${n}</strong> de ${c} saltó la fila`, (n, c) => `<strong>${n}</strong> de ${c} activó su código`];
+
+  function createNotif() {
+    const stack = document.getElementById('notifStack');
+    if (!stack) return;
+    const n = document.createElement('div');
+    n.className = 'notif';
+    n.innerHTML = `<div class="notif-icon">✓</div><div><div class="notif-text">${texts[Math.floor(Math.random() * texts.length)](names[Math.floor(Math.random() * names.length)], cities[Math.floor(Math.random() * cities.length)])}</div><div class="notif-time">hace unos segundos</div></div>`;
+    stack.appendChild(n);
+    setTimeout(() => { n.classList.add('hide'); setTimeout(() => n.remove(), 420); }, 3600);
+  }
+
+  // ─── ACTIONS ──────────────────────────────────────────────────────────────
+  function reveal() {
+    localStorage.removeItem(STORAGE_KEY);
+    closeModal();
+    document.getElementById('codeLocked').style.display  = 'none';
+    document.getElementById('codeValue').style.display   = 'inline';
+    document.getElementById('codeValue').textContent     = CODE_PLACEHOLDER;
+    document.getElementById('codeBox').classList.add('revealed');
+    document.getElementById('btnCopy').style.display     = 'flex';
+    document.getElementById('doneBanner').classList.add('visible');
+    document.getElementById('btnPay').style.display      = 'none';
+    document.getElementById('lossFrame').style.display   = 'none';
+    document.getElementById('queueWidget').style.display = 'none';
+    document.getElementById('timerDisplay').textContent  = '00:00';
+    document.getElementById('timerDisplay').classList.remove('urgent');
+    document.querySelector('.timer-sub').textContent = 'código desbloqueado';
+  }
+
+  function openModal() { document.getElementById('modal').classList.add('open'); }
+  function closeModal() { document.getElementById('modal').classList.remove('open'); }
+  function closeModalOnBackdrop(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+  
+  // FUNCIÓN ACTUALIZADA PARA REDIRIGIR AL LINK DE PAGO
+  function simulatePay() { 
+    window.location.href = 'https://whop.com/checkout/plan_7s8svpfpoJpA0';
+  }
+
+  function copyCode() {
+    const code = document.getElementById('codeValue').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.getElementById('btnCopy');
+      btn.classList.add('copied');
+      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copiado`;
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar código`;
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
