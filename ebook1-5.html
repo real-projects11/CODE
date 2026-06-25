@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Historia Premium - Tráfico Frío</title>
+    
+    <!-- Tipografía moderna sans-serif (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* === RESET & CONFIGURACIÓN BÁSICA === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            /* Fondo negro obsidiana exigido */
+            background-color: #0B0B0B;
+            /* Degradado radial sutil para un aspecto premium */
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #0B0B0B 70%);
+            color: #ffffff;
+            /* 100dvh asegura que ocupe la pantalla real en móviles */
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden; /* Prohibido el scroll */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === BARRA DE PROGRESO (Estilo Instagram) === */
+        #progress-container {
+            display: flex;
+            gap: 4px;
+            padding: 12px 8px;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 50;
+        }
+
+        .progress-segment {
+            flex: 1;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #ffffff;
+            border-radius: 4px;
+        }
+
+        /* Animación CSS para la barra de progreso activa */
+        .progress-segment.active .progress-fill {
+            animation: fillProgress var(--slide-duration) linear forwards;
+        }
+
+        .progress-segment.completed .progress-fill {
+            width: 100%;
+            transition: none;
+        }
+
+        @keyframes fillProgress {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        /* === SLIDES (Contenido) === */
+        #slides-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: scale(0.98); 
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        /* === TIPOGRAFÍA & JERARQUÍA === */
+        .slide-title {
+            /* Texto extremadamente grande y legible */
+            font-size: clamp(2.2rem, 9vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+            /* Degradado de texto para máximo contraste premium */
+            background: linear-gradient(180deg, #FFFFFF 0%, #A1A1AA 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            max-width: 800px;
+        }
+
+        .slide-subtitle {
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+            font-weight: 400;
+            color: #A1A1AA;
+            line-height: 1.4;
+            max-width: 600px;
+            margin-bottom: 3rem;
+        }
+
+        /* === BOTÓN CTA === */
+        .cta-button {
+            display: inline-block;
+            background-color: #ffffff;
+            color: #000000;
+            font-weight: 800; /* Un poco más de peso para el botón */
+            font-size: 1.2rem;
+            padding: 18px 42px;
+            border-radius: 100px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            position: relative;
+            z-index: 100; 
+            box-shadow: 0 4px 30px rgba(255, 255, 255, 0.2);
+            margin-top: 2rem;
+        }
+
+        .cta-button:active {
+            transform: scale(0.95);
+        }
+
+        /* === CONTROLES DE NAVEGACIÓN (Zonas táctiles) === */
+        .touch-zone {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            z-index: 20;
+        }
+
+        .touch-left {
+            left: 0;
+            width: 30%;
+        }
+
+        .touch-right {
+            right: 0;
+            width: 70%;
+        }
+
+        /* === CAPA DE TAP FINAL (redirección directa) === */
+        #end-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            cursor: pointer;
+        }
+
+        #end-overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-container"></div>
+    <div id="slides-container"></div>
+
+    <div class="touch-zone touch-left" id="zone-left"></div>
+    <div class="touch-zone touch-right" id="zone-right"></div>
+
+    <a id="end-overlay" href="" target="_self"></a>
+
+    <script>
+        /**
+         * ==========================================
+         * CONTENIDO DEL FUNNEL (Copywriter Senior)
+         * ==========================================
+         * Textos cortos, directos y con alto impacto.
+         */
+        const funnelData = [
+            {
+                title: "Tu mente no se detiene nunca.",
+                subtitle: "Ni de día, ni cuando intentas dormir."
+            },
+            {
+                title: "No estás roto.",
+                subtitle: "Solo estás atascado."
+            },
+            {
+                title: "Existe un botón de pausa mental."
+            },
+            {
+                title: "Una técnica de 3 minutos lo logra."
+            },
+            {
+                title: "Toca aquí para apagar el ruido ahora.",
+                ctaText: "Ver método ahora",
+                ctaLink: "https://real-projects11.github.io/CODE/ebooks/ebook-ansiedad.html",
+                isEnd: true 
+            }
+        ];
+
+        /**
+         * ==========================================
+         * LÓGICA DE LA APLICACIÓN
+         * ==========================================
+         */
+        // Reducido a 4 segundos para un ritmo más hipnótico y ágil
+        const SLIDE_DURATION = 4000; 
+        
+        let currentIndex = 0;
+        let slideTimer;
+
+        const slidesContainer = document.getElementById('slides-container');
+        const progressContainer = document.getElementById('progress-container');
+        const zoneLeft = document.getElementById('zone-left');
+        const zoneRight = document.getElementById('zone-right');
+        const endOverlay = document.getElementById('end-overlay');
+
+        document.documentElement.style.setProperty('--slide-duration', `${SLIDE_DURATION}ms`);
+
+        function init() {
+            funnelData.forEach((slide, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'progress-segment';
+                segment.id = `progress-${index}`;
+                segment.innerHTML = `<div class="progress-fill"></div>`;
+                progressContainer.appendChild(segment);
+
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'slide';
+                slideDiv.id = `slide-${index}`;
+                
+                let htmlContent = `<h1 class="slide-title">${slide.title}</h1>`;
+                if (slide.subtitle) {
+                    htmlContent += `<p class="slide-subtitle">${slide.subtitle}</p>`;
+                }
+                if (slide.ctaText && slide.ctaLink) {
+                    htmlContent += `<a href="${slide.ctaLink}" class="cta-button">${slide.ctaText}</a>`;
+                }
+                
+                slideDiv.innerHTML = htmlContent;
+                slidesContainer.appendChild(slideDiv);
+            });
+
+            updateUI();
+            setupEventListeners();
+        }
+
+        function updateUI() {
+            if (slideTimer) clearTimeout(slideTimer);
+
+            document.querySelectorAll('.slide').forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentIndex) slide.classList.add('active');
+            });
+
+            document.querySelectorAll('.progress-segment').forEach((segment, index) => {
+                segment.classList.remove('active', 'completed');
+                void segment.offsetWidth; 
+
+                if (index < currentIndex) {
+                    segment.classList.add('completed');
+                } else if (index === currentIndex) {
+                    segment.classList.add('active');
+                }
+            });
+
+            if (!funnelData[currentIndex].isEnd) {
+                slideTimer = setTimeout(nextSlide, SLIDE_DURATION);
+            } else if (funnelData[currentIndex].ctaLink) {
+                // Auto-redirect tras 2s si el usuario no toca el botón antes
+                slideTimer = setTimeout(() => {
+                    window.location.href = funnelData[currentIndex].ctaLink;
+                }, 2000);
+            }
+
+            // Capa de tap final: solo activa en el último slide (con CTA)
+            const current = funnelData[currentIndex];
+            if (current.isEnd && current.ctaLink) {
+                endOverlay.href = current.ctaLink;
+                endOverlay.classList.add('active');
+                zoneLeft.style.pointerEvents = 'none';
+                zoneRight.style.pointerEvents = 'none';
+            } else {
+                endOverlay.classList.remove('active');
+                zoneLeft.style.pointerEvents = 'auto';
+                zoneRight.style.pointerEvents = 'auto';
+            }
+        }
+
+        function nextSlide() {
+            if (currentIndex < funnelData.length - 1) {
+                currentIndex++;
+                updateUI();
+            }
+        }
+
+        function prevSlide() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateUI();
+            }
+        }
+
+        function setupEventListeners() {
+            zoneRight.addEventListener('mousedown', nextSlide);
+            zoneRight.addEventListener('touchstart', (e) => { e.preventDefault(); nextSlide(); });
+            
+            zoneLeft.addEventListener('mousedown', prevSlide);
+            zoneLeft.addEventListener('touchstart', (e) => { e.preventDefault(); prevSlide(); });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                }
+            });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
