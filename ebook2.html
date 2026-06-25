@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Desbloquea tu Confianza - Premium Story Funnel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* === RESET & CONFIGURACIÓN BÁSICA DE VIEWPORT === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Elimina flash azul en dispositivos móviles */
+        }
+
+        body {
+            /* Fondo negro obsidiana premium */
+            background-color: #0B0B0B;
+            /* Degradado radial sutil para generar profundidad visual sin distraer */
+            background-image: radial-gradient(circle at 50% 15%, #161616 0%, #0B0B0B 75%);
+            color: #ffffff;
+            /* 100dvh evita problemas con barras dinámicas de navegadores móviles (Safari/Chrome iOS/Android) */
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden; /* Estrictamente prohibido el scroll horizontal y vertical */
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* === INDICE DE PROGRESO SUPERIOR (Estilo Instagram/TikTok) === */
+        #progress-container {
+            display: flex;
+            gap: 5px;
+            padding: 16px 12px;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 50; /* Por encima del contenido */
+        }
+
+        .progress-segment {
+            flex: 1;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        /* Animación fluida controlada por hardware a través de la variable de JS */
+        .progress-segment.active .progress-fill {
+            animation: fillProgress var(--slide-duration) linear forwards;
+        }
+
+        .progress-segment.completed .progress-fill {
+            width: 100%;
+            transition: none;
+        }
+
+        @keyframes fillProgress {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        /* === CONTENEDOR Y DIAPOSITIVAS (SLIDES) === */
+        #slides-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2.5rem;
+            opacity: 0;
+            visibility: hidden;
+            /* Transición suave de opacidad y escala sutil estilo Apple */
+            transition: opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1), transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+            transform: scale(0.96); 
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        /* === JERARQUÍA VISUAL MINIMALISTA EXTREMA === */
+        .slide-title {
+            /* Tamaño ultra grande, adaptativo y de lectura instantánea (< 1s) */
+            font-size: clamp(2.3rem, 9.5vw, 4.2rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.04em;
+            margin-bottom: 1rem;
+            /* Degradado premium desaturado (Estilo Linear / Stripe) */
+            background: linear-gradient(180deg, #FFFFFF 0%, #A1A1AA 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            max-width: 640px; /* Evita líneas demasiado largas en pantallas anchas */
+            width: 100%;
+        }
+
+        .slide-subtitle {
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+            font-weight: 400;
+            color: #A1A1AA;
+            line-height: 1.4;
+            max-width: 600px;
+            margin-top: 0.25rem;
+        }
+
+        /* === BOTÓN DE CONVERSIÓN (CTA) === */
+        .cta-button {
+            display: inline-block;
+            background-color: #ffffff;
+            color: #000000;
+            font-weight: 600;
+            font-size: clamp(1.1rem, 4.5vw, 1.3rem);
+            padding: 18px 40px;
+            border-radius: 12px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            position: relative;
+            z-index: 100; /* Siempre por encima de las zonas de navegación táctil */
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.12);
+            margin-top: 2.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .cta-button:active {
+            transform: scale(0.96);
+            background-color: #E4E4E7;
+        }
+
+        /* === CAPAS TÁCTILES DE NAVEGACIÓN === */
+        .touch-zone {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            z-index: 20; /* Por encima de las slides pero debajo del CTA */
+        }
+
+        .touch-left { left: 0; width: 30%; }
+        .touch-right { right: 0; width: 70%; }
+
+        /* === CAPA DE TAP FINAL (salida rápida antes del auto-redirect) === */
+        #end-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            cursor: pointer;
+        }
+
+        #end-overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-container"></div>
+    <div id="slides-container"></div>
+
+    <div class="touch-zone touch-left" id="zone-left"></div>
+    <div class="touch-zone touch-right" id="zone-right"></div>
+
+    <a id="end-overlay" href="" target="_self"></a>
+
+    <script>
+        /**
+         * =========================================================================
+         * SISTEMA DE CONTENIDO REUTILIZABLE (Copywriting: Psicología Masculina)
+         * =========================================================================
+         */
+        const funnelData = [
+            { title: "La ves y tu mente se apaga.", subtitle: "El corazón acelera, las palabras no salen." },
+            { title: "Te quedas callado.", subtitle: "Llegas a casa sintiéndote invisible otra vez." },
+            { title: "Tu físico no es el problema real." },
+            { title: "Es solo un cortocircuito.", subtitle: "Existe un método para apagarlo." },
+            {
+                title: "Toca aquí para desbloquear tu seguridad ahora.",
+                ctaText: "Desbloquear mi seguridad",
+                ctaLink: "https://real-projects11.github.io/CODE/ebooks/game.html",
+                isEnd: true 
+            }
+        ];
+
+        const SLIDE_DURATION = 3800; 
+        
+        let currentIndex = 0;
+        let slideTimer;
+
+        const slidesContainer = document.getElementById('slides-container');
+        const progressContainer = document.getElementById('progress-container');
+        const zoneLeft = document.getElementById('zone-left');
+        const zoneRight = document.getElementById('zone-right');
+        const endOverlay = document.getElementById('end-overlay');
+
+        document.documentElement.style.setProperty('--slide-duration', `${SLIDE_DURATION}ms`);
+
+        function init() {
+            funnelData.forEach((slide, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'progress-segment';
+                segment.id = `progress-${index}`;
+                segment.innerHTML = `<div class="progress-fill"></div>`;
+                progressContainer.appendChild(segment);
+
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'slide';
+                slideDiv.id = `slide-${index}`;
+                
+                let htmlContent = `<h1 class="slide-title">${slide.title}</h1>`;
+                if (slide.subtitle) {
+                    htmlContent += `<p class="slide-subtitle">${slide.subtitle}</p>`;
+                }
+                if (slide.ctaText && slide.ctaLink) {
+                    htmlContent += `<a href="${slide.ctaLink}" class="cta-button">${slide.ctaText}</a>`;
+                }
+                
+                slideDiv.innerHTML = htmlContent;
+                slidesContainer.appendChild(slideDiv);
+            });
+
+            updateUI();
+            setupEventListeners();
+        }
+
+        function updateUI() {
+            if (slideTimer) clearTimeout(slideTimer);
+
+            document.querySelectorAll('.slide').forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentIndex) slide.classList.add('active');
+            });
+
+            document.querySelectorAll('.progress-segment').forEach((segment, index) => {
+                segment.classList.remove('active', 'completed');
+                void segment.offsetWidth; 
+
+                if (index < currentIndex) {
+                    segment.classList.add('completed');
+                } else if (index === currentIndex) {
+                    segment.classList.add('active');
+                }
+            });
+
+            if (!funnelData[currentIndex].isEnd) {
+                slideTimer = setTimeout(nextSlide, SLIDE_DURATION);
+            } else if (funnelData[currentIndex].ctaLink) {
+                // Auto-redirect tras 2s si el usuario no toca el botón antes
+                slideTimer = setTimeout(() => {
+                    window.location.href = funnelData[currentIndex].ctaLink;
+                }, 2000);
+            }
+
+            // Capa de tap final: salida rápida, evita conflicto de z-index con touch-zone
+            const current = funnelData[currentIndex];
+            if (current.isEnd && current.ctaLink) {
+                endOverlay.href = current.ctaLink;
+                endOverlay.classList.add('active');
+                zoneLeft.style.pointerEvents = 'none';
+                zoneRight.style.pointerEvents = 'none';
+            } else {
+                endOverlay.classList.remove('active');
+                zoneLeft.style.pointerEvents = 'auto';
+                zoneRight.style.pointerEvents = 'auto';
+            }
+        }
+
+        function nextSlide() {
+            if (currentIndex < funnelData.length - 1) {
+                currentIndex++;
+                updateUI();
+            }
+        }
+
+        function prevSlide() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateUI();
+            }
+        }
+
+        function setupEventListeners() {
+            zoneRight.addEventListener('mousedown', nextSlide);
+            zoneRight.addEventListener('touchstart', (e) => { e.preventDefault(); nextSlide(); }, { passive: false });
+            
+            zoneLeft.addEventListener('mousedown', prevSlide);
+            zoneLeft.addEventListener('touchstart', (e) => { e.preventDefault(); prevSlide(); }, { passive: false });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                }
+            });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
