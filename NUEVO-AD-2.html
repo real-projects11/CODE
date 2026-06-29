@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo Interstitial High Converter - Fixed Layout</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; }
+
+  /* ── OVERLAY ── */
+  #interstitial {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+    padding: 12px;
+  }
+
+  /* ── CARD (Alto estricto para evitar scroll) ── */
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    width: 100%; max-width: 340px;
+    height: 92vh; /* Ocupa el 92% de la pantalla para asegurar que entre todo */
+    max-height: 750px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,.4);
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+
+  /* ── CLOSE ── */
+  #closeBtn {
+    position: absolute; top: 8px; right: 8px;
+    padding: 6px 12px; border-radius: 6px;
+    background: rgba(0,0,0,.75); color: #fff;
+    border: none; font-size: 11px; font-weight: bold;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    cursor: pointer; z-index: 10;
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s;
+  }
+  #closeBtn.visible { opacity: 1; pointer-events: all; }
+
+  /* ── VIDEO (Fijado para no deformarse) ── */
+  .video-wrap {
+    position: relative;
+    width: 100%;
+    flex-grow: 1; /* Toma todo el espacio que sobra arriba del texto */
+    background: #000;
+  }
+  .video-wrap video {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; 
+    object-fit: cover; /* Esto evita las franjas negras */
+    display: block;
+  }
+
+  /* ── MUTE BUTTON ── */
+  #muteBtn {
+    position: absolute; 
+    bottom: 10px; 
+    right: 15px; 
+    background: #e91e8c; 
+    border: none; 
+    color: #fff;
+    border-radius: 30px; 
+    padding: 8px 16px; 
+    font-size: 11px; 
+    font-weight: 800;
+    cursor: pointer; 
+    box-shadow: 0 4px 15px rgba(233, 30, 140, 0.5);
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    animation: pulse 1.5s infinite;
+    transition: all 0.3s ease;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  #muteBtn.sonido-activado {
+    bottom: 8px; right: 8px; transform: none; padding: 0;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(0,0,0,.5); box-shadow: none;
+    animation: none; justify-content: center;
+  }
+  #muteBtn.sonido-activado span { display: none; }
+  #muteBtn i { font-style: normal; font-size: 14px; }
+
+  /* ── BODY (Protegido del resize) ── */
+  .card-body { 
+    flex-shrink: 0; /* Impide que el texto se achique o colapse */
+    padding: 12px 14px; 
+    background: #fff;
+    z-index: 2;
+  }
+
+  .label {
+    font-size: 10px; font-weight: 800; letter-spacing: .5px;
+    color: #ef4444; text-transform: uppercase; margin-bottom: 4px;
+    display: block;
+  }
+
+  .card-body h2 {
+    font-size: 16px; font-weight: 800; color: #111;
+    line-height: 1.1; margin-bottom: 4px; letter-spacing: -0.3px;
+  }
+
+  .beneficios {
+    font-size: 11px; font-weight: 600; color: #059669;
+    margin-bottom: 8px; line-height: 1.4;
+  }
+  
+  .precio-box {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .precio-tachado {
+    font-size: 12px; color: #888; text-decoration: line-through; font-weight: 500;
+  }
+  .precio-final {
+    font-size: 15px; font-weight: 900; 
+    color: #ef4444; /* Rojo para urgencia */
+  }
+  /* Nueva Etiqueta de Pago Único */
+  .badge-pago {
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── TIMER BAR ── */
+  .timer-bar-wrap {
+    background: #e5e7eb; border-radius: 99px; height: 4px; margin-bottom: 10px; overflow: hidden;
+  }
+  #timerBar {
+    height: 100%; background: #ef4444; border-radius: 99px;
+    width: 100%; transition: width 1s linear;
+  }
+
+  /* ── CTA ── */
+  .cta {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: #16a34a; 
+    color: #fff;
+    border: none; border-radius: 8px;
+    padding: 10px 16px; width: 100%;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    text-decoration: none; transition: background .2s;
+    box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);
+  }
+  .cta:hover { background: #15803d; }
+  .cta svg { flex-shrink: 0; }
+
+  /* ── SKIP TEXT ── */
+  #skipText {
+    text-align: center; font-size: 10px; color: #888; margin-top: 8px; font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<div style="padding:40px;text-align:center;color:#999;font-size:14px;">
+  (Contenido de tu página principal)
+</div>
+
+<div id="interstitial">
+  <div class="card">
+
+    <button id="closeBtn" onclick="cerrar()">✕ Cerrar</button>
+
+    <div class="video-wrap">
+      <video id="adVideo"
+        src="https://real-projects11.github.io/CODE/ads/ad1.mp4"
+        autoplay playsinline loop muted>
+      </video>
+      
+      <button id="muteBtn" onclick="toggleMute()">
+        <i id="muteIcon">🔇</i>
+        <span>TOCÁ PARA ESCUCHAR</span>
+      </button>
+    </div>
+
+    <div class="card-body">
+      <span class="label">🔥 80% OFF - TIEMPO LIMITADO</span>
+      <h2>Empezá a ganar dinero haciendo Sushi Dulce en casa</h2>
+      
+      <p class="beneficios">
+        ✓ Método rápido ✓ Sin experiencia<br>
+        ✓ Descarga en todos los teléfonos
+      </p>
+      
+      <div class="precio-box">
+        <span class="precio-tachado">Normal $35</span>
+        <span class="precio-final">Solo $7 USD</span>
+        <span class="badge-pago">Pago Único</span>
+      </div>
+
+      <div class="timer-bar-wrap"><div id="timerBar"></div></div>
+
+      <a href="URL_DE_TU_RECURSO_O_OFERTA" class="cta" target="_blank" rel="noopener">
+        ¡Quiero empezar a ganar dinero!
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+             viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+
+      <p id="skipText">Esta oferta desaparece en…</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const WAIT_SECONDS = 43; 
+  const AUTO_CLOSE   = false;
+
+  let remaining = WAIT_SECONDS;
+  const bar      = document.getElementById('timerBar');
+  const closeBtn = document.getElementById('closeBtn');
+  const skipText = document.getElementById('skipText');
+
+  bar.style.width = '100%';
+
+  const interval = setInterval(() => {
+    remaining--;
+    bar.style.width = (remaining / WAIT_SECONDS * 100) + '%';
+    if (remaining <= 0) {
+      clearInterval(interval);
+      closeBtn.classList.add('visible');
+      skipText.textContent = 'Ya podés cerrar este anuncio ✓';
+      if (AUTO_CLOSE) cerrar();
+    } else {
+      skipText.textContent = `Esta oferta desaparece en… (${remaining}s)`;
+    }
+  }, 1000);
+
+  function cerrar() {
+    document.getElementById('interstitial').style.display = 'none';
+  }
+
+  const vid = document.getElementById('adVideo');
+  const muteBtn = document.getElementById('muteBtn');
+  const muteIcon = document.getElementById('muteIcon');
+
+  function toggleMute() {
+    vid.muted = !vid.muted;
+    
+    if (vid.muted) {
+      muteIcon.textContent = '🔇';
+      muteBtn.classList.remove('sonido-activado');
+    } else {
+      muteIcon.textContent = '🔊';
+      muteBtn.classList.add('sonido-activado');
+    }
+  }
+</script>
+
+</body>
+</html>
