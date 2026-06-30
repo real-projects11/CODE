@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceso — SMART</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: #e8e8e8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .phone {
+    width: 375px;
+    height: 780px;
+    background: #111;
+    border-radius: 50px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Navbar */
+  .navbar {
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px 12px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #222;
+  }
+  .ham { display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
+  .ham span { display: block; width: 22px; height: 2px; background: #fff; border-radius: 2px; }
+  .logo { font-size: 22px; font-weight: 900; letter-spacing: -0.04em; color: #fff; }
+  .logo sup { font-size: 8px; font-weight: 600; vertical-align: super; letter-spacing: 0; }
+  .nav-ico svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 1.6; display: block; cursor: pointer; }
+
+  /* Hero área */
+  .hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 28px;
+    gap: 0;
+  }
+
+  /* Icono central */
+  .hero-icon {
+    width: 72px;
+    height: 72px;
+    background: #1e1e1e;
+    border: 1px solid #2e2e2e;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .hero-icon svg { width: 34px; height: 34px; stroke: #c8c8c8; fill: none; stroke-width: 1.4; }
+
+  .hero-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 10px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #fff;
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    font-weight: 400;
+    color: #666;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 36px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Divider */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: #222;
+    margin-bottom: 36px;
+  }
+
+  /* Botones */
+  .btn-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .btn {
+    width: 100%;
+    border: none;
+    border-radius: 40px;
+    padding: 15px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s, filter .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(0.975); }
+
+  /* Botón plateado */
+  .btn-silver {
+    background: linear-gradient(160deg, #e8e8e8 0%, #c2c2c2 40%, #d8d8d8 70%, #b0b0b0 100%);
+    color: #111;
+    box-shadow: 0 4px 20px rgba(200,200,200,0.18), inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  .btn-silver:hover { filter: brightness(1.06); box-shadow: 0 6px 28px rgba(200,200,200,0.28); }
+
+  .btn-icon { width: 16px; height: 16px; stroke: #111; fill: none; stroke-width: 2; flex-shrink: 0; }
+
+  /* Footer */
+  .foot {
+    padding: 14px 24px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .foot-dot { width: 6px; height: 6px; border-radius: 50%; background: #2e2e2e; }
+  .foot-txt { font-size: 10px; font-weight: 400; color: #444; letter-spacing: -0.01em; }
+
+  @media (max-width: 420px) {
+    body { background: #111; align-items: flex-start; }
+    .phone { width: 100vw; height: 100dvh; border-radius: 0; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <nav class="navbar">
+    <div class="ham"><span></span><span></span><span></span></div>
+    <div class="logo">SMART<sup>®</sup></div>
+    <div class="nav-ico">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    </div>
+  </nav>
+
+  <div class="hero">
+
+    <div class="hero-icon">
+      <svg viewBox="0 0 24 24">
+        <rect x="2" y="3" width="20" height="14" rx="2"/>
+        <path d="M8 21h8M12 17v4"/>
+      </svg>
+    </div>
+
+    <span class="hero-label">Panel de Acceso</span>
+    <h1 class="hero-title">¿Qué querés hacer?</h1>
+    <p class="hero-sub">Elegí una opción para continuar.</p>
+
+    <div class="divider"></div>
+
+    <div class="btn-wrap">
+
+      <!-- Botón 1: Generar Código -->
+      <a href="https://real-projects11.github.io/CODE/CODE/index.html" target="_blank" class="btn btn-silver" id="btn-codigo">
+        <svg class="btn-icon" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+        GENERAR CÓDIGO — CLIC AQUÍ
+      </a>
+
+      <!-- Botón 2: Inscripciones Servicio TV -->
+      <a href="https://real-projects11.github.io/CODE/serv/serv.html" target="_blank" class="btn btn-silver" id="btn-inscripciones">
+        <svg class="btn-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        GANA DINERO — INSCRIPCIONES SERVICIO TV — CLIC AQUÍ
+      </a>
+
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <div class="foot-dot"></div>
+    <span class="foot-txt">Acceso exclusivo</span>
+    <div class="foot-dot"></div>
+  </div>
+
+</div>
+</body>
+</html>
