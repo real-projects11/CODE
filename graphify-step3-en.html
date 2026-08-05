@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Graphify: an easy guide</title>
+
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#ffffff;
+    --silver:#A0A0A0;
+    --silver-dim:#5a5a5a;
+    --accent:#e9e9e9;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    height:100%; overflow:hidden;
+    background:var(--bg); color:var(--fg);
+    font-family:'Courier New', 'Segoe UI', monospace, sans-serif;
+  }
+  body{
+    display:flex; flex-direction:column; height:100vh; width:100vw;
+    align-items:center; justify-content:center; padding:16px 0; gap:12px;
+  }
+
+  .panel{
+    width:100%; max-width:380px;
+    background:#080808; border:1px solid #222; border-radius:14px;
+    padding:22px 18px; display:flex; flex-direction:column; gap:14px;
+    animation:fadeIn .4s ease; text-align:center;
+  }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .check-icon{
+    width:46px; height:46px; border-radius:50%;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.25);
+    display:flex; align-items:center; justify-content:center; margin:0 auto;
+    color:var(--accent); font-size:22px;
+  }
+
+  .result-title{ font-size:17px; font-weight:800; letter-spacing:.3px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .result-title span{ color:var(--accent); }
+
+  .recap{
+    text-align:left; background:#0f0f0f; border:1px solid #1f1f1f; border-radius:10px;
+    padding:12px 14px; display:flex; flex-direction:column; gap:9px;
+  }
+  .recap-item{ display:flex; gap:10px; align-items:flex-start; }
+  .recap-num{
+    background:rgba(255,255,255,.1); color:var(--accent); font-weight:800; font-size:12px;
+    min-width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    border:1px solid rgba(255,255,255,.25); flex-shrink:0; margin-top:1px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  .recap-txt{ font-size:12.5px; color:#d1d5db; line-height:1.4;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .recap-txt strong{ color:#fff; }
+  .recap-txt code{ background:#111; border:1px solid #262626; color:#e2e2e2; padding:1px 6px;
+    border-radius:5px; font-size:11.5px; font-family:'Courier New',monospace; }
+
+  .btn-solid{
+    background:linear-gradient(135deg,#ffffff 0%,#b8b8b8 100%); color:#000; border:none;
+    width:100%; padding:14px; border-radius:9px; font-weight:800; font-size:13px;
+    letter-spacing:.4px; text-transform:uppercase; cursor:pointer; text-decoration:none;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    transition:transform .15s ease, filter .2s ease;
+  }
+  .btn-solid:hover{ filter:brightness(1.06); transform:translateY(-1px); }
+
+  .btn-outline{
+    background:transparent; border:1px solid var(--silver); color:var(--fg);
+    width:100%; padding:13px; border-radius:9px; font-weight:700; font-size:12.5px;
+    letter-spacing:.3px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    transition:all .2s ease;
+  }
+  .btn-outline:hover{ background:var(--fg); color:#000; }
+  .btn-outline.copied{ background:#ffffff; border-color:#ffffff; color:#000; }
+
+  .ad-slot-small{
+    width:320px; min-height:50px; height:auto; max-width:94%;
+    background:#0a0a0a; border:1px dashed var(--silver-dim); border-radius:8px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .ad-slot-small iframe{ max-width:100% !important; display:block !important; }
+  .ad-slot-big{
+    width:300px; height:200px; max-width:100%; background:#0a0a0a;
+    border:1px solid #1f1f1f; border-radius:12px; margin:2px auto 0;
+    display:flex; justify-content:center; align-items:center; overflow:hidden; position:relative;
+  }
+  .ad-slot-big iframe{ max-width:100% !important; display:block !important; }
+</style>
+</head>
+<body>
+
+  <!-- ===== AD TOP ===== -->
+  <div class="ad-slot-small" id="adSlotTop">
+    <script type="text/javascript">
+      atOptions = { 'key' : '87b04073200cdd655a562f19119611bb', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
+    </script>
+    <script type="text/javascript" src="https://cleavegrate.com/87b04073200cdd655a562f19119611bb/invoke.js"></script>
+  </div>
+
+  <div class="panel">
+    <div class="check-icon">✓</div>
+    <p class="result-title">Now you know what <span>Graphify</span> is</p>
+
+    <div class="recap">
+      <div class="recap-item">
+        <div class="recap-num">1</div>
+        <div class="recap-txt"><strong>Install it once</strong> — one command, no hassle.</div>
+      </div>
+      <div class="recap-item">
+        <div class="recap-num">2</div>
+        <div class="recap-txt">In Claude Code, type <strong><code>/graphify .</code></strong> inside your project.</div>
+      </div>
+      <div class="recap-item">
+        <div class="recap-num">3</div>
+        <div class="recap-txt">Done: your AI now has the map and <strong>answers better and faster</strong>.</div>
+      </div>
+    </div>
+
+    <div class="ad-slot-big" id="adSlotMiddle">
+      <script type="text/javascript">
+        atOptions = { 'key' : '769d8d3d593ad963692e85dcad6fb33e', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };
+      </script>
+      <script type="text/javascript" src="https://cleavegrate.com/769d8d3d593ad963692e85dcad6fb33e/invoke.js"></script>
+    </div>
+
+    <a class="btn-solid" id="repoBtn" target="_blank" rel="noopener">
+      View repository on GitHub ↗
+    </a>
+    <button class="btn-outline" id="copyLinkBtn">🔗 Copy link to this guide</button>
+  </div>
+
+  <!-- ===== AD BOTTOM ===== -->
+  <div class="ad-slot-small" id="adSlotBottom">
+    <script type="text/javascript">
+      atOptions = { 'key' : '87b04073200cdd655a562f19119611bb', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
+    </script>
+    <script type="text/javascript" src="https://cleavegrate.com/87b04073200cdd655a562f19119611bb/invoke.js"></script>
+  </div>
+
+<script>
+  // ===== CONFIG =====
+  const REPO_LINK = "https://github.com/safishamsi/graphify";
+  const GUIDE_LINK = "https://YOUR-DOMAIN.vercel.app/graphify-step1-en.html"; // replace with your real link
+
+  document.getElementById('repoBtn').href = REPO_LINK;
+
+  const copyBtn = document.getElementById('copyLinkBtn');
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(GUIDE_LINK).then(() => {
+      copyBtn.textContent = '✅ Link copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.innerHTML = '🔗 Copy link to this guide';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    }).catch(() => {
+      const temp = document.createElement('input');
+      temp.value = GUIDE_LINK;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      copyBtn.textContent = '✅ Link copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.innerHTML = '🔗 Copy link to this guide';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+</script>
+
+<!-- Social Bar -->
+<script src="https://cleavegrate.com/99/eb/0b/99eb0b70935151c2bf675800e9484811.js"></script>
+
+</body>
+</html>
